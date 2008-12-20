@@ -34,7 +34,7 @@ MULTILINE_SEP = '-----\n'
 KEYLINE_RE = re.compile('^[A-Z ]+:')
 
 def parse_date(s):
-    return datetime.strptime(s, '%m/%d/%Y %r') 
+    return datetime.strptime(s, '%m/%d/%Y %I:%M:%S %p') 
 
 def make_metadata_block(lines):
     metadata = {}
@@ -42,7 +42,12 @@ def make_metadata_block(lines):
 	key, val = l.strip().split(':', 1)
 	if key.lower() not in METADATA_FIELDS:
 	    raise Exception('Got bad key (%s) in metadata block.' % key)
-	metadata[key.lower()] = val.lstrip()
+	if key.lower() == 'date':
+	    metadata[key.lower()] = parse_date(val.lstrip())
+	elif key.lower() == 'tags':
+	    metadata[key.lower()] = val.lstrip().replace('"', '')
+	else:
+	    metadata[key.lower()] = val.lstrip()
     return 'metadata', metadata
 
 def make_normal_block(lines):
@@ -63,7 +68,10 @@ def make_normal_block(lines):
 	    if key.lower() not in MULTILINE_FIELDS[btype]:
 		raise Exception('Got unknown key (%s) for %s block.' % \
 				    (key, btype))
-	    block[key.lower()] = val.lstrip()
+	    if key.lower() == 'date':
+		block[key.lower()] = parse_date(val.lstrip())
+	    else:
+		block[key.lower()] = val.lstrip()
 	    continue
 	else:
 	    keys = False
