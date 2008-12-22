@@ -18,7 +18,7 @@ METADATA_FIELDS = (
     'basename',
     'tags',
 )
-
+ 
 MULTILINE_FIELDS = {
     'body': tuple(),
     'extended body': tuple(),
@@ -73,6 +73,8 @@ def make_normal_block(lines):
 	    else:
 		block[key.lower()] = val.lstrip()
 	    continue
+	elif first:
+	    continue
 	else:
 	    keys = False
 	    body.append(l)
@@ -94,7 +96,13 @@ def parse_entry(lines):
 	if l == MULTILINE_SEP:
 	    btype, block = make_block(block_lines, first=first)
 	    first = False
-	    entry[btype] = block
+	    if btype == 'comment':
+		if btype in entry:
+		    entry[btype].append(block)
+		else:
+		    entry[btype] = [block]
+	    else:
+		entry[btype] = block
 	    block_lines = []
 	    continue
 	block_lines.append(l)
